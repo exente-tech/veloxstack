@@ -69,6 +69,16 @@
               <h2>Request your walkthrough</h2>
               <p class="form-note">Tell us a little about your product and we’ll tailor the session.</p>
               <form class="form-grid" id="demo-request-form">
+                <div class="honeypot-field" aria-hidden="true">
+                  <label for="website-field">Website</label>
+                  <input
+                    id="website-field"
+                    type="text"
+                    name="website"
+                    tabindex="-1"
+                    autocomplete="off"
+                  />
+                </div>
                 <label>
                   Name
                   <input type="text" name="name" placeholder="Jane Doe" autocomplete="name" required />
@@ -149,7 +159,16 @@
           }
 
           const formData = new FormData(form);
+          const honeypot = String(formData.get("website") || "").trim();
+
+          if (honeypot) {
+            form.reset();
+            setStatus("Thanks. Your request has been received.", "success");
+            return;
+          }
+
           const payload = {
+            requestType: "demo",
             name: String(formData.get("name") || "").trim(),
             email: String(formData.get("email") || "").trim(),
             company: String(formData.get("company") || "").trim(),
