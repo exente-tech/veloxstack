@@ -68,26 +68,27 @@
             <article class="form-card panel">
               <h2>Request your walkthrough</h2>
               <p class="form-note">Tell us a little about your product and we’ll tailor the session.</p>
-              <form class="form-grid">
+              <form class="form-grid" id="demo-request-form">
                 <label>
                   Name
-                  <input type="text" name="name" placeholder="Jane Doe" />
+                  <input type="text" name="name" placeholder="Jane Doe" autocomplete="name" required />
                 </label>
                 <label>
                   Work Email
-                  <input type="email" name="email" placeholder="jane@company.com" />
+                  <input type="email" name="email" placeholder="jane@company.com" autocomplete="email" required />
                 </label>
                 <label>
                   Company
-                  <input type="text" name="company" placeholder="Acme" />
+                  <input type="text" name="company" placeholder="Acme" autocomplete="organization" />
                 </label>
                 <label>
                   Message
-                  <textarea name="message" placeholder="Tell us about your SaaS and how you want to use tenant inboxes."></textarea>
+                  <textarea name="message" placeholder="Tell us about your SaaS and how you want to use tenant inboxes." required></textarea>
                 </label>
                 <div>
                   <button class="button" type="submit">Request Demo</button>
                 </div>
+                <p class="form-status" id="demo-form-status" role="status" aria-live="polite"></p>
               </form>
             </article>
           </div>
@@ -118,5 +119,94 @@
         </div>
       </footer>
     </div>
+    <script>
+      (() => {
+        const endpoint = "https://email.api.exente-tech.com/v1/public/lead-requests";
+        const form = document.getElementById("demo-request-form");
+        const status = document.getElementById("demo-form-status");
+
+        if (!form || !status) {
+          return;
+        }
+
+        const submitButton = form.querySelector('button[type="submit"]');
+        const defaultButtonLabel = submitButton ? submitButton.textContent : "";
+
+        const setStatus = (message, type) => {
+          status.textContent = message;
+          status.className = "form-status";
+
+          if (type) {
+            status.classList.add(`is-${type}`);
+          }
+        };
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+
+          if (!form.reportValidity()) {
+            return;
+          }
+
+          const formData = new FormData(form);
+          const payload = {
+            name: String(formData.get("name") || "").trim(),
+            email: String(formData.get("email") || "").trim(),
+            company: String(formData.get("company") || "").trim(),
+            message: String(formData.get("message") || "").trim(),
+            source: "website-demo-form",
+            page: window.location.href
+          };
+
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Sending...";
+          }
+
+          setStatus("Sending your request...", "pending");
+
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+
+            let responseBody = null;
+
+            try {
+              responseBody = await response.json();
+            } catch (error) {
+              responseBody = null;
+            }
+
+            if (!response.ok) {
+              const message =
+                responseBody && typeof responseBody.message === "string"
+                  ? responseBody.message
+                  : "We couldn't send your request right now. Please try again or email hello@exente-tech.com.";
+              throw new Error(message);
+            }
+
+            form.reset();
+            setStatus("Thanks. Your demo request has been sent and we'll follow up soon.", "success");
+          } catch (error) {
+            const message =
+              error instanceof Error && error.message
+                ? error.message
+                : "We couldn't send your request right now. Please try again or email hello@exente-tech.com.";
+            setStatus(message, "error");
+          } finally {
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = defaultButtonLabel;
+            }
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

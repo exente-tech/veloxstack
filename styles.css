@@ -178,6 +178,12 @@ img {
   transform: translateY(-2px);
 }
 
+.button:disabled {
+  cursor: wait;
+  opacity: 0.85;
+  transform: none;
+}
+
 .hero,
 .section,
 .page-hero {
@@ -844,6 +850,25 @@ pre code {
 .form-grid {
   display: grid;
   gap: 16px;
+}
+
+.form-status {
+  margin: 0;
+  min-height: 24px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.form-status.is-pending {
+  color: var(--muted);
+}
+
+.form-status.is-success {
+  color: #0f7b53;
+}
+
+.form-status.is-error {
+  color: #bb2437;
 }
 
 label {
